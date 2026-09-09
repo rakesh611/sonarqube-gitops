@@ -1,0 +1,67 @@
+edition: community
+
+OpenShift:
+  enabled: true
+
+  createSCC: false
+
+
+monitoringPasscode: "Aayush@123"
+
+
+jdbcOverwrite:
+  enabled: true
+
+  jdbcUrl: "jdbc:postgresql://sonarqube-postgresql:5432/sonarqube"
+
+  jdbcUsername: "sonar"
+
+  jdbcSecretName: "sonarqube-db"
+
+  jdbcSecretPasswordKey: "password"
+
+
+nodeSelector:
+  workload: sonarqube
+
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workload
+              operator: In
+              values:
+                - sonarqube
+
+
+service:
+  type: ClusterIP
+
+  externalPort: 9000
+
+  internalPort: 9000
+
+
+route:
+  enabled: true
+
+  host: sonarqube.ocp.lan
+
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "2Gi"
+
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+
+
+replicaCount: 1
+
+
+persistence:
+  enabled: false
