@@ -3,11 +3,12 @@ kind: Application
 metadata:
   name: sonarqube
   namespace: argocd
+
 spec:
   project: default
 
   source:
-    repoURL: https://github.com/YOUR_USERNAME/sonarqube-gitops.git
+    repoURL: https://github.com/rakesh611/sonarqube-gitops.git
     targetRevision: main
     path: .
 
@@ -19,5 +20,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
+
     syncOptions:
       - CreateNamespace=true
