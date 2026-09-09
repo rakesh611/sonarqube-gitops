@@ -83,17 +83,17 @@ spec:
 
           volumeMounts:
 
-            # SonarQube application data
-            - name: sonarqube-data
+            - name: sonarqube-storage
               mountPath: /opt/sonarqube/data
+              subPath: data
 
-            # SonarQube extensions/plugins
-            - name: sonarqube-extensions
+            - name: sonarqube-storage
               mountPath: /opt/sonarqube/extensions
+              subPath: extensions
 
-            # SonarQube logs
-            - name: sonarqube-logs
+            - name: sonarqube-storage
               mountPath: /opt/sonarqube/logs
+              subPath: logs
 
           readinessProbe:
             httpGet:
