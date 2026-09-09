@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarqube-pvc
+  namespace: sonarqube
+
+spec:
+  accessModes:
+    - ReadWriteOnce
+
+  storageClassName: lvms-vg1
+
+  resources:
+    requests:
+      storage: 20Gi
