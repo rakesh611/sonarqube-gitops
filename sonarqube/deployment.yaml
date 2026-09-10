@@ -1,130 +1,100 @@
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: sonarqube
+  name: sonarqube-postgres
   namespace: sonarqube
-
   labels:
-    app: sonarqube
+    app: sonarqube-postgres
 
 spec:
   replicas: 1
 
+  strategy:
+    type: Recreate
+
   selector:
     matchLabels:
-      app: sonarqube
+      app: sonarqube-postgres
 
   template:
-
     metadata:
       labels:
-        app: sonarqube
+        app: sonarqube-postgres
 
     spec:
-
-      # -----------------------------------
-      # Fixed workload node
-      # -----------------------------------
-      nodeSelector:
-        workload: sonarqube
-
-      # -----------------------------------
-      # Graceful shutdown
-      # -----------------------------------
-      terminationGracePeriodSeconds: 120
+      terminationGracePeriodSeconds: 60
 
       containers:
+        - name: postgres
 
-        - name: sonarqube
-
-          image: sonarqube:community
-
+          image: postgres:16
           imagePullPolicy: IfNotPresent
 
           ports:
-            - name: http
-              containerPort: 9000
+            - name: postgres
+              containerPort: 5432
               protocol: TCP
 
           env:
-
-            # -----------------------------------
-            # PostgreSQL
-            # -----------------------------------
-
-            - name: SONAR_JDBC_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: sonarqube-config
-                  key: SONAR_JDBC_URL
-
-            - name: SONAR_JDBC_USERNAME
-              valueFrom:
-                configMapKeyRef:
-                  name: sonarqube-config
-                  key: SONAR_JDBC_USERNAME
-
-            - name: SONAR_JDBC_PASSWORD
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: sonarqube-secret
-                  key: SONAR_JDBC_PASSWORD
+                  name: sonarqube-postgres-secret
+                  key: POSTGRES_USER
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sonarqube-postgres-secret
+                  key: POSTGRES_PASSWORD
+
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: sonarqube-postgres-secret
+                  key: POSTGRES_DB
+
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
 
           resources:
-
             requests:
-              cpu: "1"
-              memory: 2Gi
+              cpu: 500m
+              memory: 1Gi
 
             limits:
               cpu: "2"
-              memory: 4Gi
-
-          volumeMounts:
-
-            - name: sonarqube-storage
-              mountPath: /opt/sonarqube/data
-              subPath: data
-
-            - name: sonarqube-storage
-              mountPath: /opt/sonarqube/extensions
-              subPath: extensions
-
-            - name: sonarqube-storage
-              mountPath: /opt/sonarqube/logs
-              subPath: logs
+              memory: 2Gi
 
           readinessProbe:
-            httpGet:
-              path: /api/system/status
-              port: 9000
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
-            failureThreshold: 12
+            failureThreshold: 6
 
           livenessProbe:
-            httpGet:
-              path: /api/system/status
-              port: 9000
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 
-            initialDelaySeconds: 120
-            periodSeconds: 30
+            initialDelaySeconds: 30
+            periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 6
 
       volumes:
-
-        - name: sonarqube-data
+        - name: postgres-data
           persistentVolumeClaim:
-            claimName: sonarqube-pvc
-
-        - name: sonarqube-extensions
-          persistentVolumeClaim:
-            claimName: sonarqube-pvc
-
-        - name: sonarqube-logs
-          persistentVolumeClaim:
-            claimName: sonarqube-pvc
+            claimName: sonarqube-postgres-pvc
+```
