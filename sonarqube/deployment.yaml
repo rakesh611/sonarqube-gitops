@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: sonarqube
+  namespace: sonarqube
+  labels:
+    app: sonarqube
+
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app: sonarqube
+
+  template:
+    metadata:
+      labels:
+        app: sonarqube
+
+    spec:
+      nodeSelector:
+        workload: sonarqube
+
+      terminationGracePeriodSeconds: 120
+
+      containers:
+        - name: sonarqube
+
+          image: sonarqube:2026.1-community
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+
+          env:
+            - name: SONAR_JDBC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: sonarqube-config
+                  key: SONAR_JDBC_URL
+
+            - name: SONAR_JDBC_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: sonarqube-config
+                  key: SONAR_JDBC_USERNAME
+
+            - name: SONAR_JDBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sonarqube-secret
+                  key: SONAR_JDBC_PASSWORD
+
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+
+            limits:
+              cpu: "2"
+              memory: 4Gi
+
+          volumeMounts:
+            - name: sonarqube-storage
+              mountPath: /opt/sonarqube/data
+              subPath: data
+
+            - name: sonarqube-storage
+              mountPath: /opt/sonarqube/extensions
+              subPath: extensions
+
+            - name: sonarqube-storage
+              mountPath: /opt/sonarqube/logs
+              subPath: logs
+
+          readinessProbe:
+            httpGet:
+              path: /api/system/status
+              port: 9000
+
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+
+          livenessProbe:
+            httpGet:
+              path: /api/system/status
+              port: 9000
+
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+
+      volumes:
+        - name: sonarqube-storage
+          persistentVolumeClaim:
+            claimName: sonarqube-pvc
