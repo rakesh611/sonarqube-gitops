@@ -6,14 +6,12 @@ metadata:
   namespace: sonarqube
 
 spec:
-
   type: ClusterIP
 
   selector:
     app: sonarqube
 
   ports:
-
     - name: http
       port: 9000
       targetPort: 9000
