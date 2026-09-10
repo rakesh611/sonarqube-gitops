@@ -1,20 +1,14 @@
 apiVersion: route.openshift.io/v1
 kind: Route
-
 metadata:
   name: sonarqube
   namespace: sonarqube
-
 spec:
-  host: sonarqube.ocp.lan
-
   to:
     kind: Service
     name: sonarqube
-
   port:
     targetPort: http
-
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
