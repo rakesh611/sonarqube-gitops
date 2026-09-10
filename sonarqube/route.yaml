@@ -6,7 +6,6 @@ metadata:
   namespace: sonarqube
 
 spec:
-
   host: sonarqube.ocp.lan
 
   to:
