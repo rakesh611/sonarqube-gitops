@@ -31,7 +31,7 @@ spec:
       containers:
         - name: sonarqube
 
-          image: sonarqube:2026.1-community
+          image: image: docker.io/library/sonarqube:community
           imagePullPolicy: IfNotPresent
 
           ports:
