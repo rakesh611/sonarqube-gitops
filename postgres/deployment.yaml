@@ -10,6 +10,9 @@ metadata:
 spec:
   replicas: 1
 
+  # PostgreSQL uses a single ReadWriteOnce PVC.
+  # Recreate prevents two PostgreSQL pods from trying
+  # to use the same RWO volume during an update.
   strategy:
     type: Recreate
 
@@ -24,6 +27,13 @@ spec:
 
     spec:
       terminationGracePeriodSeconds: 60
+
+      # OpenShift-compatible filesystem group.
+      # Allows the mounted volume to be accessed by
+      # the PostgreSQL process running with an arbitrary UID.
+      securityContext:
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
 
       containers:
         - name: postgres
@@ -63,7 +73,6 @@ spec:
             requests:
               cpu: 500m
               memory: 1Gi
-
             limits:
               cpu: "2"
               memory: 2Gi
