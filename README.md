@@ -360,6 +360,86 @@ namespace: sonarqube
 
 but the controller needed explicit permission in that namespace.
 
+```
+1. Create Role
+cat <<'EOF' | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argocd-sonarqube-deployer
+  namespace: sonarqube
+rules:
+  - apiGroups: [""]
+    resources:
+      - configmaps
+      - services
+      - persistentvolumeclaims
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  - apiGroups: ["route.openshift.io"]
+    resources:
+      - routes
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+    verbs:
+      - get
+      - list
+      - watch
+EOF
+```
+
+```
+2. Bind the Role to Argo CD
+cat <<'EOF' | oc apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-sonarqube-deployer
+  namespace: sonarqube
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: argocd-sonarqube-deployer
+EOF
+```
+
+
 ---
 
 # 12. Verify Argo CD Permissions
